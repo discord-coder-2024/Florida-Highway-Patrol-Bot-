@@ -1,11 +1,10 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder, REST, Routes } = require('discord.js');
-require('dotenv').config();
+const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
-// !ping command (sends message instead of reply)
+// !ping command (send message)
 client.on("messageCreate", (message) => {
   if (message.content === "!ping") {
     if (message.author.bot) {
@@ -16,12 +15,10 @@ client.on("messageCreate", (message) => {
   }
 });
 
-// Ready event
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
-  // Register slash commands
-  const commands = [
+  await client.application.commands.create(
     new SlashCommandBuilder()
       .setName('slash-command-tester')
       .setDescription('Tests the bot\'s ability to use slash commands')
@@ -33,21 +30,12 @@ client.once("ready", async () => {
         option.setName('content')
           .setDescription('The content of the embed to send.')
           .setRequired(true))
-  ].map(cmd => cmd.toJSON());
+      .toJSON()
+  );
 
-  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-  try {
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, 'YOUR_GUILD_ID'), // replace with your guild ID
-      { body: commands }
-    );
-    console.log('✅ Slash commands registered successfully.');
-  } catch (error) {
-    console.error(error);
-  }
+  console.log('✅ Slash command registered dynamically.');
 });
 
-// Handle slash command
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -70,4 +58,4 @@ The author of the command has requested that I include \`${interaction.options.g
   }
 });
 
-client.login(process.env.TOKEN);
+client.login('YOUR_BOT_TOKEN');
