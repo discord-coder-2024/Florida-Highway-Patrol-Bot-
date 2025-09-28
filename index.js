@@ -67,4 +67,4 @@ The author of the command has requested that I include \`${interaction.options.g
 });
 
 // Log in (replace with your actual bot token)
-client.login('YOUR_BOT_TOKEN_HERE');
+client.login('process.env.token');
