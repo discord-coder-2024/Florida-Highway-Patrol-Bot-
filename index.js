@@ -1,10 +1,11 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
+// Create client with necessary intents
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
-// !ping command (send message)
+// !ping command (sends message)
 client.on("messageCreate", (message) => {
   if (message.content === "!ping") {
     if (message.author.bot) {
@@ -15,27 +16,34 @@ client.on("messageCreate", (message) => {
   }
 });
 
+// Ready event
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
-  await client.application.commands.create(
-    new SlashCommandBuilder()
-      .setName('slash-command-tester')
-      .setDescription('Tests the bot\'s ability to use slash commands')
-      .addChannelOption(option =>
-        option.setName('channel')
-          .setDescription('The channel to send the embed to.')
-          .setRequired(true))
-      .addStringOption(option =>
-        option.setName('content')
-          .setDescription('The content of the embed to send.')
-          .setRequired(true))
-      .toJSON()
-  );
+  try {
+    // Dynamically register the slash command
+    await client.application.commands.create(
+      new SlashCommandBuilder()
+        .setName('slash-command-tester')
+        .setDescription('Tests the bot\'s ability to use slash commands')
+        .addChannelOption(option =>
+          option.setName('channel')
+            .setDescription('The channel to send the embed to.')
+            .setRequired(true))
+        .addStringOption(option =>
+          option.setName('content')
+            .setDescription('The content of the embed to send.')
+            .setRequired(true))
+        .toJSON()
+    );
 
-  console.log('✅ Slash command registered dynamically.');
+    console.log('✅ Slash command registered dynamically.');
+  } catch (error) {
+    console.error('Failed to register slash command:', error);
+  }
 });
 
+// Handle slash commands
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -58,4 +66,5 @@ The author of the command has requested that I include \`${interaction.options.g
   }
 });
 
-client.login('process.env.discord_token');
+// Log in (replace with your actual bot token)
+client.login('YOUR_BOT_TOKEN_HERE');
