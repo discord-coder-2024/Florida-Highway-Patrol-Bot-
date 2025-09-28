@@ -58,4 +58,4 @@ The author of the command has requested that I include \`${interaction.options.g
   }
 });
 
-client.login('process.env.TOKEN');
+client.login("process.env.TOKEN");
