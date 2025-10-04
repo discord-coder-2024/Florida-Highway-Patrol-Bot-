@@ -1,70 +1,75 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+require('dotenv').config();
+const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
 
-// Create client with necessary intents
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  partials: [Partials.Channel],
 });
 
-// !ping command (sends message)
-client.on("messageCreate", (message) => {
-  if (message.content === "!ping") {
-    if (message.author.bot) {
-      message.channel.send("You are a bot, and not permitted to request my `!ping` command!");
-    } else {
-      message.channel.send("Pong!");
-    }
-  }
-});
+// In-memory storage for infractions
+const infractions = {};
 
-// Ready event
-client.once("ready", async () => {
+client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-
-  try {
-    // Dynamically register the slash command
-    await client.application.commands.create(
-      new SlashCommandBuilder()
-        .setName('slash-command-tester')
-        .setDescription('Tests the bot\'s ability to use slash commands')
-        .addChannelOption(option =>
-          option.setName('channel')
-            .setDescription('The channel to send the embed to.')
-            .setRequired(true))
-        .addStringOption(option =>
-          option.setName('content')
-            .setDescription('The content of the embed to send.')
-            .setRequired(true))
-        .toJSON()
-    );
-
-    console.log('✅ Slash command registered dynamically.');
-  } catch (error) {
-    console.error('Failed to register slash command:', error);
-  }
 });
 
-// Handle slash commands
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
 
-  if (interaction.commandName === 'slash-command-tester') {
+  if (message.content.startsWith('!infract')) {
+    const args = message.content.split(' ').slice(1);
+
+    if (args.length < 4) {
+      return message.reply('Usage: `!infract {userID} {reason} {notes} {expiration}`');
+    }
+
+    const [userID, reason, notes, expirationStr] = args;
+    const expiration = parseInt(expirationStr);
+
+    if (isNaN(expiration)) {
+      return message.reply('❌ Expiration must be a valid Unix timestamp.');
+    }
+
+    // Store infraction
+    if (!infractions[userID]) infractions[userID] = [];
+    infractions[userID].push({
+      reason,
+      notes,
+      expiration,
+      issuedBy: message.author.id,
+      timestamp: Date.now()
+    });
+
+    // Create an embed
     const embed = new EmbedBuilder()
-      .setTitle('Slash command successful!')
-      .setDescription(`This was a test of my ability to use slash commands! 
-I have succeeded. 
-The author of the command has requested that I include \`${interaction.options.getString('content')}\` in this embed.`)
-      .setColor(0x5865F2)
+      .setTitle('⚠️ User Infraction Issued')
+      .setColor(0xff0000)
+      .addFields(
+        { name: 'User', value: `<@${userID}> (${userID})`, inline: true },
+        { name: 'Reason', value: reason, inline: true },
+        { name: 'Notes', value: notes },
+        { name: 'Expiration', value: `<t:${Math.floor(expiration / 1000)}:F>`, inline: true },
+        { name: 'Issued By', value: `<@${message.author.id}>`, inline: true },
+      )
       .setTimestamp();
 
-    const channel = await client.channels.fetch(interaction.options.getChannel('channel').id);
-    if (channel) {
-      await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: '✅ Embed sent!', ephemeral: true });
-    } else {
-      await interaction.reply({ content: '❌ Channel not found!', ephemeral: true });
+    // Send embed to the new log channel and ping the user
+    try {
+      const logChannel = await message.guild.channels.fetch('1421861782430945282');
+      if (logChannel) {
+        logChannel.send({
+          content: `<@${userID}>`,
+          embeds: [embed]
+        });
+        message.reply(`✅ Infraction issued for <@${userID}>. Logged in the moderation channel.`);
+      } else {
+        message.reply('❌ Could not find the moderation log channel.');
+      }
+    } catch (error) {
+      console.error(error);
+      message.reply('❌ Failed to log infraction.');
     }
   }
 });
 
-// Log in (replace with your actual bot token)
-client.login('process.env.token');
+client.login(process.env.TOKEN);

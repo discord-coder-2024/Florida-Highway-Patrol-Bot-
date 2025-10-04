@@ -1,16 +1,24 @@
 {
-  "dependencies": {
-    "discord.js": "^14.22.1",
-    "dotenv": "^17.2.2"
-  },
-  "name": "florida-highway-patrol-bot-",
-  "description": "This is a bot for the Florida Highway Patrol. We are a department derived from Florida State Roleplay, an ER:LC community.",
+  "name": "discord-infract-bot",
   "version": "1.0.0",
+  "description": "A simple Discord bot with !infract command",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "discord",
+    "bot",
+    "moderation",
+    "infract"
+  ],
+  "author": "YourName",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.16.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
