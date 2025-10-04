@@ -17,10 +17,14 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (message.content.startsWith('!infract')) {
-    const args = message.content.split(' ').slice(1);
+    // Remove the command itself and join the rest of the message
+    const rawArgs = message.content.slice('!infract'.length).trim();
+
+    // Split by '|'
+    const args = rawArgs.split('|').map(arg => arg.trim());
 
     if (args.length < 4) {
-      return message.reply('Usage: `!infract {userID} {reason} {notes} {expiration}`');
+      return message.reply('Usage: `!infract userID | reason | notes | expiration`');
     }
 
     const [userID, reason, notes, expirationStr] = args;
@@ -53,12 +57,12 @@ client.on('messageCreate', async (message) => {
       )
       .setTimestamp();
 
-    // Send embed to the new log channel and ping the user
+    // Send embed to log channel and ping user
     try {
       const logChannel = await message.guild.channels.fetch('1421861782430945282');
       if (logChannel) {
         logChannel.send({
-          content: `<@${userID}>`,
+          content: `<@${userID}> You have received an infraction!`,
           embeds: [embed]
         });
         message.reply(`✅ Infraction issued for <@${userID}>. Logged in the moderation channel.`);
