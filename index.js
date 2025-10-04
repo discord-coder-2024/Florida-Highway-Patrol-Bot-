@@ -31,7 +31,7 @@ client.on('messageCreate', async (message) => {
     const expiration = parseInt(expirationStr);
 
     if (isNaN(expiration)) {
-      return message.reply('❌ Expiration must be a valid Unix timestamp.');
+      return message.reply("It seems like the expiration you provided is not in the valid timestamp format. Please ensure that all arguments are separated by \'|\' symbols. Timestamps should be in Unix format or 'none'. \n\n -# 'none' is none operational at this time. Please open a support ticket for the ETA.");
     }
 
     // Store infraction
@@ -46,23 +46,18 @@ client.on('messageCreate', async (message) => {
 
     // Create an embed
     const embed = new EmbedBuilder()
-      .setTitle('⚠️ User Infraction Issued')
-      .setColor(0xff0000)
-      .addFields(
-        { name: 'User', value: `<@${userID}> (${userID})`, inline: true },
-        { name: 'Reason', value: reason, inline: true },
-        { name: 'Notes', value: notes },
-        { name: 'Expiration', value: `<t:${Math.floor(expiration / 1000)}:F>`, inline: true },
-        { name: 'Issued By', value: `<@${message.author.id}>`, inline: true },
-      )
-      .setTimestamp();
+  .setTitle('An Infraction Has Been Issued')
+  .setColor(0xff0000)
+  .setDescription(`**User:** <@${userID}> '(${userID})'\n**Reason:** ${reason}\n**Expiration:** <t:${Math.floor(expiration / 1000)}:F>\n**Issued By:** <@${message.author.id}>`)
+  .addField('Notes', notes)
+  .setTimestamp();
 
     // Send embed to log channel and ping user
     try {
       const logChannel = await message.guild.channels.fetch('1421861782430945282');
       if (logChannel) {
         logChannel.send({
-          content: `<@${userID}> You have received an infraction!`,
+          content: `${userID.username}, you have received an infraction.`,
           embeds: [embed]
         });
         message.reply(`✅ Infraction issued for <@${userID}>. Logged in the moderation channel.`);
